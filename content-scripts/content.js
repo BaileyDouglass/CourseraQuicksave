@@ -35,10 +35,10 @@ function updateInfo() {
 }
 
 function downloadVideoTranscript() {
-    $('#downloads-dropdown-btn').click()
+    document.querySelector('#downloads-dropdown-btn').click()
     
-    let transcriptLink = $('a[download="transcript.txt"]');
-    let transcriptHref = transcriptLink.attr('href');
+    let transcriptLink = document.querySelector('a[download="transcript.txt"]');
+    let transcriptHref = transcriptLink.getAttribute('href');
     
     fetch(transcriptHref)
     .then(response => response.blob())
@@ -58,13 +58,16 @@ function downloadReadingTranscript() {
     let mainDiv = document.querySelector('div[data-testid="cml-viewer"]') // Div that stores <p>, <ol>, <ul>
     let mainDivNodes = mainDiv.childNodes
 
+    // For making the top of the file look nice
     let aestheticDivider = ''
     for (i = 0; i < pageTitle.length; i++) {
         aestheticDivider += '_'
     }
 
+    // Convert HTML formatting into .txt
     let mainTextContent = pageTitle + '\n' + aestheticDivider + '\n\n'; // Start the file with the page's title
     
+    // Iterate through all sub elements of the instructions
     for (const child of mainDivNodes) { 
         let indent = '' // default of no indent
         if (child.tagName === 'UL') {
@@ -99,7 +102,6 @@ function downloadReadingTranscript() {
     readingBlobAnchor.click()
     document.body.removeChild(readingBlobAnchor)
 
-
     // Find downloads area
     let assetLinks = document.querySelectorAll(".cml-asset")
 
@@ -129,12 +131,24 @@ function downloadQuizMetadata () {
     const quizBlob = new Blob([pageTitle], { type: 'text/plain'})
     const quizBlobAnchor = document.createElement('a');
     quizBlobAnchor.href = URL.createObjectURL(quizBlob)
-    quizBlobAnchor.download = courseTitle + " " + courseModuleNumber + "." + sectionIndex + "." + sidebarIndex + " " + sectionTitle + " #" + pageTitle + " [Quiz]." + "txt";
+    quizBlobAnchor.download = courseTitle + " " + courseModuleNumber + "." + sectionIndex + "." + sidebarIndex + " " + sectionTitle + " #" + pageTitle + " ["+ contentType + "]." + "txt";
     document.body.appendChild(quizBlobAnchor);
     quizBlobAnchor.click()
     document.body.removeChild(quizBlobAnchor)
 }
 
+function downloadAssignmentMetadata () {
+    // Create a blob to download the page's instructions
+    const quizBlob = new Blob([pageTitle], { type: 'text/plain'})
+    const quizBlobAnchor = document.createElement('a');
+    quizBlobAnchor.href = URL.createObjectURL(quizBlob)
+    quizBlobAnchor.download = courseTitle + " " + courseModuleNumber + "." + sectionIndex + "." + sidebarIndex + " " + sectionTitle + " #" + pageTitle + " ["+ contentType + "]." + "txt";
+    document.body.appendChild(quizBlobAnchor);
+    quizBlobAnchor.click()
+    document.body.removeChild(quizBlobAnchor)
+}
+
+// Function to figure out how to download the page
 function initDownload() {
     if (contentType == "Video") {
         downloadVideoTranscript();
@@ -142,15 +156,21 @@ function initDownload() {
     } else if (contentType == "Reading") {
         downloadReadingTranscript();
         console.log("Reading transcript downloaded!")
-    } else if (contentType == "Quiz") {
+    } else if (contentType == "Quiz" || contentType == "Practice Quiz") {
         downloadQuizMetadata();
+    } else if (contentType == "Programming Assignment") {
+        downloadAssignmentMetadata();
     }
 }
 
+// Add Event Handling for when download button is pressed in popup
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     if (request.msg === "downloadTranscript") {
-        updateInfo();
-        initDownload();
+        if (document.baseURI == 'https://www.coursera.org/') {
+            alert("Please sign in or create an account, and start viewing course materials to start easily saving your files with CourseraQuicksave!")
+        } else {
+            updateInfo();
+            initDownload();
+        }
     }
-    sendResponse({ fromcontent: "This message is from content.js" });
 });

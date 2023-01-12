@@ -1,16 +1,5 @@
-let checkbox = document.getElementById('toggle');
-
-let savedValue = localStorage.getItem('checkbox-value')
-
-if (savedValue == 'true') {
-    checkbox.checked = true;
-} else {
-    checkbox.checked = false;
-}
-
-checkbox.addEventListener('change', function() {
-    localStorage.setItem('checkbox-value', this.checked)
-})
+// Handle Checkbox for saving required course files
+let saveFilesCheckbox = document.getElementById('saveFilesToggle');
 
 // Detect download button being clicked, and send message to active window to start download process from there
 const downloadTranscriptBtn = document.getElementById("downloadTranscriptBtn");
